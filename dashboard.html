@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockchain Dashboard - Demo en Vivo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
+            color: #fff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: fadeIn 0.8s ease-in;
+        }
+
+        h1 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+        }
+
+        .subtitle {
+            font-size: 1.3em;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            font-size: 1.1em;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(74, 222, 128, 0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 222, 128, 0.6);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-refresh {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+        }
+
+        .btn-auto {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        }
+
+        .btn-auto.active {
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+        }
+
+        .progress-section {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .progress-title {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .current-phase {
+            font-size: 2em;
+            font-weight: bold;
+            color: #fbbf24;
+            margin: 15px 0;
+            animation: pulse 2s infinite;
+        }
+
+        .phase-description {
+            font-size: 1.1em;
+            opacity: 0.9;
+            line-height: 1.6;
+            margin: 15px 0;
+        }
+
+        .progress-bar-container {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            height: 30px;
+            margin: 20px 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #4ade80, #22c55e);
+            height: 100%;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .timeline {
+            margin: 20px 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .event {
+            background: rgba(255,255,255,0.05);
+            border-left: 4px solid #4ade80;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            animation: slideIn 0.5s ease-out;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .event-icon {
+            font-size: 2em;
+            min-width: 50px;
+        }
+
+        .event-content {
+            flex: 1;
+        }
+
+        .event-title {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .event-time {
+            opacity: 0.7;
+            font-size: 0.9em;
+        }
+
+        .event.pending {
+            border-left-color: #fbbf24;
+            opacity: 0.6;
+        }
+
+        .nodes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .node-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .node-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .node-alice { border-color: #60a5fa; }
+        .node-bob { border-color: #fbbf24; }
+        .node-charlie { border-color: #4ade80; }
+
+        .node-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .node-name {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .node-icon {
+            font-size: 3em;
+        }
+
+        .node-balance {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #4ade80;
+            text-align: center;
+            margin: 15px 0;
+            text-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .node-balance.changed {
+            animation: balancePulse 0.5s ease;
+        }
+
+        @keyframes balancePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); color: #fbbf24; }
+        }
+
+        .node-status {
+            text-align: center;
+            padding: 8px;
+            border-radius: 20px;
+            background: rgba(74, 222, 128, 0.2);
+            margin-top: 10px;
+        }
+
+        .node-status.inactive {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .node-status.waiting {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        .node-address {
+            font-size: 0.8em;
+            opacity: 0.7;
+            text-align: center;
+            margin-top: 10px;
+            word-break: break-all;
+        }
+
+        .blockchain-section {
+            background: rgba(236, 72, 153, 0.1);
+            border: 2px solid rgba(236, 72, 153, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+
+        .blocks-container {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding: 20px 0;
+        }
+
+        .block {
+            min-width: 180px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .block:not(:last-child)::after {
+            content: '→';
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5em;
+            color: #fbbf24;
+        }
+
+        .block:hover {
+            transform: scale(1.05);
+            background: rgba(255,255,255,0.2);
+        }
+
+        .block-new {
+            animation: blockAppear 0.5s ease-out;
+            border-color: #4ade80;
+            box-shadow: 0 0 20px rgba(74, 222, 128, 0.5);
+        }
+
+        .block-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #fbbf24;
+            margin-bottom: 10px;
+        }
+
+        .block-info {
+            font-size: 0.9em;
+            margin: 5px 0;
+        }
+
+        .transactions-section {
+            background: rgba(139, 92, 246, 0.1);
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+
+        .transaction-item {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .tx-flow {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
+        }
+
+        .tx-party {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .tx-arrow {
+            font-size: 2em;
+            color: #4ade80;
+        }
+
+        .tx-amount {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #fbbf24;
+        }
+
+        .tx-status {
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+            background: rgba(74, 222, 128, 0.3);
+            color: #4ade80;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes blockAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.8) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .waiting-message {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.3em;
+            opacity: 0.7;
+        }
+
+        .last-update {
+            text-align: center;
+            opacity: 0.6;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .nodes-grid {
+                grid-template-columns: 1fr;
+            }
+            h1 { font-size: 2em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔗 Blockchain Dashboard - Demo en Vivo</h1>
+            <p class="subtitle">Sistema de Pagos Descentralizado P2P</p>
+            <div class="controls">
+                <button class="btn btn-refresh" id="btn-refresh" onclick="manualUpdate()">
+                    🔄 Actualizar Ahora
+                </button>
+                <button class="btn btn-auto" id="btn-auto" onclick="toggleAutoUpdate()">
+                    ⏸️ Auto: PAUSADO
+                </button>
+            </div>
+            <div class="last-update" id="last-update">
+                Cargando datos...
+            </div>
+        </header>
+
+        <div class="progress-section">
+            <div class="progress-title">
+                📊 Progreso de la Demostración
+            </div>
+            <div class="current-phase" id="current-phase">
+                Conectando con los nodos...
+            </div>
+            <div class="phase-description" id="phase-description">
+                Verificando estado de los nodos...
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progress-bar" style="width: 0%">
+                    <span id="progress-text">0%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="progress-section">
+            <div class="section-title">
+                📋 Timeline de Eventos
+            </div>
+            <div class="timeline" id="timeline">
+                <div class="event pending">
+                    <div class="event-icon">⏳</div>
+                    <div class="event-content">
+                        <div class="event-title">Conectando con los nodos...</div>
+                        <div class="event-time">Cargando...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title">👥 Estado de los Nodos</div>
+        <div class="nodes-grid" id="nodes-grid">
+            <div class="node-card node-alice">
+                <div class="node-header">
+                    <div class="node-name">Alice</div>
+                    <div class="node-icon">👩</div>
+                </div>
+                <div class="node-balance" id="balance-alice">-- tokens</div>
+                <div class="node-status waiting">🔄 Conectando...</div>
+                <div class="node-address">Puerto: 5000</div>
+            </div>
+            <div class="node-card node-bob">
+                <div class="node-header">
+                    <div class="node-name">Bob</div>
+                    <div class="node-icon">👨</div>
+                </div>
+                <div class="node-balance" id="balance-bob">-- tokens</div>
+                <div class="node-status waiting">🔄 Conectando...</div>
+                <div class="node-address">Puerto: 5001</div>
+            </div>
+            <div class="node-card node-charlie">
+                <div class="node-header">
+                    <div class="node-name">Charlie</div>
+                    <div class="node-icon">🧑</div>
+                </div>
+                <div class="node-balance" id="balance-charlie">-- tokens</div>
+                <div class="node-status waiting">🔄 Conectando...</div>
+                <div class="node-address">Puerto: 5002</div>
+            </div>
+        </div>
+
+        <div class="blockchain-section">
+            <div class="section-title">⛓️ Cadena de Bloques</div>
+            <div class="blocks-container" id="blocks-container">
+                <div class="waiting-message">
+                    Esperando datos de la blockchain...
+                </div>
+            </div>
+        </div>
+
+        <div class="transactions-section">
+            <div class="section-title">💸 Transacciones</div>
+            <div id="transactions-container">
+                <div class="waiting-message">
+                    No hay transacciones aún
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ALICE_URL = 'http://localhost:5000';
+        const BOB_URL = 'http://localhost:5001';
+        const CHARLIE_URL = 'http://localhost:5002';
+
+        let currentPhase = 0;
+        let lastBlockCount = 0;
+        let lastTxCount = 0;
+        let knownAddresses = {};
+        let autoUpdateEnabled = false;
+        let updateInterval = null;
+        let previousBalances = { alice: 0, bob: 0, charlie: 0 };
+
+        const phases = [
+            { name: "Esperando Inicio", description: "Los nodos se están preparando", progress: 0 },
+            { name: "Nodos Iniciados ✅", description: "Los 3 nodos están activos y comunicándose", progress: 15 },
+            { name: "Wallets Creadas ✅", description: "Pares de claves RSA generados para cada nodo", progress: 30 },
+            { name: "Minando Bloques ⛏️", description: "Alice está ejecutando Proof of Work", progress: 55 },
+            { name: "Transacciones Creadas 💸", description: "Tokens siendo transferidos entre nodos", progress: 75 },
+            { name: "Transacciones Confirmadas ✅", description: "Todas las transacciones están en la blockchain", progress: 95 },
+            { name: "Demo Completada 🎉", description: "¡Sistema funcionando perfectamente!", progress: 100 }
+        ];
+
+        async function fetchData(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) return null;
+                return await response.json();
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function addEvent(icon, title, status = 'completed') {
+            const timeline = document.getElementById('timeline');
+            const time = new Date().toLocaleTimeString();
+            
+            const existingEvents = timeline.querySelectorAll('.event-title');
+            for (let event of existingEvents) {
+                if (event.textContent === title) return;
+            }
+            
+            const event = document.createElement('div');
+            event.className = `event ${status}`;
+            event.innerHTML = `
+                <div class="event-icon">${icon}</div>
+                <div class="event-content">
+                    <div class="event-title">${title}</div>
+                    <div class="event-time">${time}</div>
+                </div>
+            `;
+            
+            const waiting = timeline.querySelector('.event.pending');
+            if (waiting) waiting.remove();
+            
+            timeline.appendChild(event);
+            timeline.scrollTop = timeline.scrollHeight;
+        }
+
+        function updatePhase(phaseIndex) {
+            if (phaseIndex >= phases.length) phaseIndex = phases.length - 1;
+            if (phaseIndex <= currentPhase) return;
+            
+            currentPhase = phaseIndex;
+            
+            const phase = phases[phaseIndex];
+            document.getElementById('current-phase').textContent = phase.name;
+            document.getElementById('phase-description').textContent = phase.description;
+            document.getElementById('progress-bar').style.width = phase.progress + '%';
+            document.getElementById('progress-text').textContent = phase.progress + '%';
+        }
+
+        async function updateNodes() {
+            const nodes = [
+                { url: ALICE_URL, name: 'Alice', class: 'alice', id: 'balance-alice' },
+                { url: BOB_URL, name: 'Bob', class: 'bob', id: 'balance-bob' },
+                { url: CHARLIE_URL, name: 'Charlie', class: 'charlie', id: 'balance-charlie' }
+            ];
+
+            let activeNodes = 0;
+            let walletsCreated = 0;
+
+            for (const node of nodes) {
+                const card = document.querySelector(`.node-${node.class}`);
+                const statusEl = card.querySelector('.node-status');
+                const balanceEl = document.getElementById(node.id);
+                
+                const pingData = await fetchData(`${node.url}/`);
+                
+                if (pingData) {
+                    activeNodes++;
+                    
+                    const walletData = await fetchData(`${node.url}/wallet/info`);
+                    
+                    if (walletData && walletData.address) {
+                        walletsCreated++;
+                        knownAddresses[walletData.address] = node.name;
+                        
+                        const newBalance = walletData.balance || 0;
+                        const oldBalance = previousBalances[node.class];
+                        
+                        // Actualizar balance con animación si cambió
+                        if (newBalance !== oldBalance) {
+                            balanceEl.classList.add('changed');
+                            setTimeout(() => balanceEl.classList.remove('changed'), 500);
+                            previousBalances[node.class] = newBalance;
+                        }
+                        
+                        balanceEl.textContent = `${newBalance} tokens`;
+                        card.querySelector('.node-address').textContent = `${walletData.address.substring(0, 20)}...`;
+                        statusEl.textContent = '✅ Activo';
+                        statusEl.className = 'node-status';
+                    } else {
+                        statusEl.textContent = '🟡 Sin Wallet';
+                        statusEl.className = 'node-status waiting';
+                    }
+                } else {
+                    statusEl.textContent = '❌ Desconectado';
+                    statusEl.className = 'node-status inactive';
+                }
+            }
+
+            if (activeNodes >= 3 && currentPhase < 1) {
+                updatePhase(1);
+                addEvent('🚀', 'Los 3 nodos están activos y respondiendo');
+            }
+
+            if (walletsCreated >= 3 && currentPhase < 2) {
+                updatePhase(2);
+                addEvent('👛', 'Las 3 wallets fueron creadas con RSA-2048');
+            }
+        }
+
+        async function updateBlockchain() {
+            const data = await fetchData(`${ALICE_URL}/blockchain`);
+            if (!data || !data.chain) return;
+
+            const container = document.getElementById('blocks-container');
+            const blockCount = data.chain.length;
+
+            if (blockCount > lastBlockCount) {
+                // Primera detección de minado
+                if (blockCount === 2 && currentPhase < 3) {
+                    updatePhase(3);
+                    addEvent('⛏️', 'Comenzó el minado de bloques');
+                }
+                
+                // Nuevo bloque detectado
+                if (lastBlockCount > 0) {
+                    const newBlock = data.chain[blockCount - 1];
+                    const txCount = newBlock.transactions || 0;
+                    addEvent('📦', `Bloque #${newBlock.index} minado (${txCount} TXs)`, 'completed');
+                }
+                
+                // Alice completó minado inicial
+                if (blockCount >= 5 && lastBlockCount < 5) {
+                    addEvent('✅', 'Alice completó el minado inicial (40 tokens)');
+                }
+                
+                lastBlockCount = blockCount;
+                console.log(`✅ Blockchain actualizada: ${blockCount} bloques`);
+            }
+
+            if (blockCount > 0) {
+                container.innerHTML = data.chain.map((block) => `
+                    <div class="block">
+                        <div class="block-number">#${block.index}</div>
+                        <div class="block-info">TXs: ${block.transactions || 0}</div>
+                        <div class="block-info">Nonce: ${block.nonce || 0}</div>
+                        <div class="block-info" style="font-size: 0.75em; opacity: 0.7;">
+                            ${block.hash ? block.hash.substring(0, 8) + '...' : ''}
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function getNodeName(address) {
+            if (address === 'MINING_REWARD') return '⛏️ Recompensa';
+            return knownAddresses[address] || address.substring(0, 10) + '...';
+        }
+
+        async function updateTransactions() {
+            const data = await fetchData(`${ALICE_URL}/blockchain/full`);
+            if (!data || !data.chain) return;
+
+            const transactions = [];
+            data.chain.forEach(block => {
+                if (block.transactions) {
+                    block.transactions.forEach(tx => {
+                        transactions.push({
+                            ...tx,
+                            blockIndex: block.index,
+                            confirmed: true
+                        });
+                    });
+                }
+            });
+
+            const regularTxs = transactions.filter(tx => tx.sender !== 'MINING_REWARD');
+            const txCount = regularTxs.length;
+            
+            if (txCount > lastTxCount) {
+                if (txCount === 1 && currentPhase < 4) {
+                    updatePhase(4);
+                    addEvent('💸', 'Primera transacción creada y firmada');
+                }
+                
+                if (txCount > lastTxCount && lastTxCount > 0) {
+                    const newTx = regularTxs[txCount - 1];
+                    addEvent('✅', `TX confirmada: ${getNodeName(newTx.sender)} → ${getNodeName(newTx.recipient)} (${newTx.amount} tokens)`);
+                }
+                
+                if (txCount >= 2 && currentPhase < 5) {
+                    updatePhase(5);
+                }
+                
+                if (txCount >= 3 && currentPhase < 6) {
+                    updatePhase(6);
+                    addEvent('🎉', '¡Demo completada exitosamente!');
+                }
+                
+                lastTxCount = txCount;
+                console.log(`✅ Transacciones actualizadas: ${txCount} confirmadas`);
+            }
+
+            const container = document.getElementById('transactions-container');
+            
+            if (regularTxs.length > 0) {
+                container.innerHTML = regularTxs.map(tx => `
+                    <div class="transaction-item">
+                        <div class="tx-flow">
+                            <div class="tx-party">${getNodeName(tx.sender)}</div>
+                            <div class="tx-arrow">→</div>
+                            <div class="tx-party">${getNodeName(tx.recipient)}</div>
+                        </div>
+                        <div class="tx-amount">${tx.amount} tokens</div>
+                        <div class="tx-status">✅ Bloque #${tx.blockIndex}</div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        async function manualUpdate() {
+            const btn = document.getElementById('btn-refresh');
+            btn.disabled = true;
+            btn.textContent = '⏳ Actualizando...';
+            
+            console.log('🔄 Iniciando actualización manual...');
+            
+            await updateNodes();
+            await updateBlockchain();
+            await updateTransactions();
+            
+            const now = new Date();
+            document.getElementById('last-update').textContent = 
+                `Última actualización: ${now.toLocaleTimeString()}`;
+            
+            console.log('✅ Actualización completada');
+            
+            btn.disabled = false;
+            btn.textContent = '🔄 Actualizar Ahora';
+        }
+
+        function toggleAutoUpdate() {
+            autoUpdateEnabled = !autoUpdateEnabled;
+            const btn = document.getElementById('btn-auto');
+            
+            if (autoUpdateEnabled) {
+                btn.textContent = '▶️ Auto: ACTIVO';
+                btn.classList.add('active');
+                updateInterval = setInterval(manualUpdate, 3000);
+            } else {
+                btn.textContent = '⏸️ Auto: PAUSADO';
+                btn.classList.remove('active');
+                if (updateInterval) {
+                    clearInterval(updateInterval);
+                    updateInterval = null;
+                }
+            }
+        }
+
+        // Actualización inicial
+        setTimeout(async () => {
+            await manualUpdate();
+            
+            const checkNodesInterval = setInterval(async () => {
+                if (currentPhase === 0) {
+                    await manualUpdate();
+                } else {
+                    clearInterval(checkNodesInterval);
+                }
+            }, 5000);
+        }, 1000);
+    </script>
+</body>
+</html>
